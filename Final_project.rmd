@@ -1,0 +1,100 @@
+---
+title: "Final"
+author: 
+- Qing Dai
+- Hongyi Duan
+- Yili Luo
+- Tiancheng Pan
+- Jinshui Zhang
+- Shusheng Zhang
+date: '2022-04-18'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(zoo)
+library(readxl)
+library(cobalt)
+library(sandwich)
+library(PSweight)
+library(knitr)
+library(lme4)
+library(boot)
+library(stan4bart)
+library(rstan)
+library(kableExtra)
+```
+
+## Introduction
+
+With continuously changing abilities and accumulating mutations, SARS-CoV-2, the virus that causes COVID-19, constant evolvements and accumulated mutations in its genetic code over time. The emergence and quick spread of the alpha, beta, and delta SARS-CoV-2 VOCs have generated continuous waves of infection in the past two years. The virus has brought tremendous shocks to the supply side of the economy and resulted in millions of deaths around the globe, representing an unprecedented tragic loss of the whole human society. 
+
+By analyzing the Covid-19 Case Surveillance Public Use Data from the Centers for Disease Control and Prevention, our project aims to identify the primary factors that are sensible to the effects of Covid-19. We mainly focus on samples in North Carolina and ignore the individual observations which have missing/unknown live status records. Focusing on a single state would help eliminate potential time-invariant effects among different states. 
+
+We hope this project will bring suggestive policy implications by identifying the most vulnerable groups against the Covid-19 virus among the population. Hopefully with our convincing results, the medical facilities would be able to allocate resources, such as hospitalization and medical aids, to the appropriate groups efficiently. Also, the government can assign social welfare benefits and designate priorities for vaccination by understanding which group is most vulnerable to the virus.
+
+## FAQ
+
+### Where is the data come from and how to clean it?
+
+
+The Data is come from CDC COVID-19-Case-Surveillance-Public-Use-Data Form, which can be found at https://data.cdc.gov/Case-Surveillance/COVID-19-Case-Surveillance-Public-Use-Data-with-Ge/n8mc-b4w4/data. The code table and introduction for each parameter can also be found at the website. After filtered all the NC 2020 observation with None-missing value of `death_yn`, there are totally 575400 observation with 19 variables, and the summary of the data set are in the appendix.
+
+Data cleaning procedure:
+
+* Drop `res_state`, `state_fips_code` since all the observations come from NC
+* Drop `county_fips_code` since it is redundant as `res_county`
+* Drop `case_onset_interval`, `process`, `exposure_yn`, `-icu_yn`, `underlying_conditions_yn` since they have highly rate of missing or unknown
+* Drop the observation with `NA`
+* Combine the `Missing` and `Unknown` of `symptom_status` as `unknown`
+* Convert the `death_yn` as binary variable with `Yes` as 1
+* Change all the categorical data as factor
+
+After all we have 425307 observations left with 11 variables. The summary of the new data set can also be found at appendix
+
+```{r echo=FALSE}
+covid=read.csv("COVID-19_Case_Surveillance_Public_Use_Data_with_Geography.csv",header = TRUE)
+factor_covid <- as.data.frame(unclass(covid),stringsAsFactors=TRUE)
+```
+
+```{r echo=FALSE}
+covid_clean=covid%>%
+  select(-res_state,-state_fips_code,-county_fips_code,-case_onset_interval,-process,-exposure_yn, -icu_yn,-underlying_conditions_yn)%>%
+  drop_na()%>%
+  mutate(symptom_status=ifelse(symptom_status=="Missing","Unknown",symptom_status),
+         death_yn=ifelse(death_yn=="Yes",1,0))
+covid_clean=as.data.frame(unclass(covid_clean),stringsAsFactors=TRUE)
+```
+
+
+## Reference
+
+Bang, H. and Robins, J. (2005). Doubly Robust Estimation in Missing Data and Causal Inference Models, Biometrics, Volume 61, Pages 962–972. DOI: 10.1111/j.1541-0420.2005.00377.x
+
+CDC. COVID 19 Case Surveillance Public Use Data Form. https://data.cdc.gov/Case-Surveillance/COVID-19-Case-Surveillance-Public-Use-Data-with-Ge/n8mc-b4w4/data
+
+## Appendix
+
+### Summary of Original Data
+
+```{r echo=FALSE}
+summary(factor_covid)
+```
+
+### Summary of the cleaning Data
+
+```{r echo=FALSE}
+summary(covid_clean)
+```
+
+### code
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
+
+
