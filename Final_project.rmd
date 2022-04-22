@@ -62,12 +62,15 @@ Where:
 * $Z_i$ is the treatment variable `hosp_yn`
 * $X_i$ is the corvariates, including sex, age, and etc.
 
-Comparing to just focused on the estimator of any Machine Learning model, we chose the casual inference since we want to make sure the effect of hospitalization on the death rate is on itself instead of on any other confounders. Moreover, according to Bang and Robins (2005) proved both theoretically and through simulations, the double robust estimator provides two opportunities to deduce nearly correct inference on the causal effect, which indicated that even if one of the outcome model or Propensity score model is wrong, we can still accurately obtain an unbiased causal effect.
+Compared to just focusing on estimators of any Machine Learning model, we choose the casual inference since we want to make sure the effect of hospitalization on the death rate is on itself instead of on any other confounders. Moreover, according to theoretical proofs and simulations from Bang and Robins (2005), the double robust estimator provides two opportunities to deduce nearly correct inference on the causal effect. This method, in turn, indicates that even if one of the outcome models or Propensity score models is wrong, we can still accurately obtain an unbiased causal effect.
 
 
-### Q2 Where is the data come from?
+### Q2 Where does the data come from?
 
-The Data is come from CDC COVID-19-Case-Surveillance-Public-Use-Data Form, which can be found at https://data.cdc.gov/Case-Surveillance/COVID-19-Case-Surveillance-Public-Use-Data-with-Ge/n8mc-b4w4/data. The code table and introduction for each parameter can also be found at the website. After filtered all the NC 2020 observation with None-missing value of `death_yn`, there are totally 575400 observation with 19 variables, and the summary of the data set are in the appendix. Specifically,
+Our data comes from CDC COVID-19-Case-Surveillance-Public-Use-Data Form, which can be accessed at the website below:
+https://data.cdc.gov/Case-Surveillance/COVID-19-Case-Surveillance-Public-Use-Data-with-Ge/n8mc-b4w4/data. 
+The code table and introduction for each parameter can also be found on the website. After filtering all the NC 2020 observations with non-missing values of `death_yn`, we identify that there are 575400 observations with 19 variables. The summary of the data set is in the appendix. Specifically,
+
 
 * `res_county`: The county of the observation
 * `case_month`: The Date received by CDC
@@ -80,13 +83,13 @@ The Data is come from CDC COVID-19-Case-Surveillance-Public-Use-Data Form, which
 
 ### Q3 Why you choose this Data source than others?
 
-We choose this data source because compared to other data sources, it includes all cases with the earliest date available in each record (date received by CDC or date related to illness/specimen collection) at least 14 days before constructing the previously updated datasets. This 14-day lag allows case reporting to be stabilized and ensure that time-dependent outcome data are accurately captured.
+We choose this data source because compared to others,it includes all cases with the earliest date available in each record (date received by CDC or date related to illness/specimen collection) at least 14 days before constructing the previously updated datasets. This 14-day lag stabilizes case reporting and ensures that time-dependent outcome data is accurately captured.
 
-Moreover, most of other data source only provide the death cases without the survive, which is hard for us to build the model on the death rate.
+Moreover, most other data sources only provide the death cases without the survive status, which is hard for us to build models just on the death rate.
 
 ### Q4 Why choose North Carolina? Why not choose the United States?
 
-We choose North Carolina to eliminate potential bias existing in the large volume of data. When including every state in the country,  the data contains 1.8 billion observations during our time interval. To reduce the time-invariant effect lying in each state, such as the geography, population structure differences and government efficiencies, which our data has no measures of. Moreover, to include all the states, we may not only consider the fix but also random group effect caused by different states, which may cause our model too complicated to converge. Therefore, finally we choose just explore on our own states
+We choose the state of North Carolina to eliminate potential bias existing in the large volume of data. When including every state in the country,  the data contains 1.8 billion observations during our time interval. If so, we will have no methods to reduce the time-invariant effect lying in each state, such as geography variance, population structure differences, and government efficiencies data has no measures. Moreover, to include all the states, we may consider both the fixed and random group effects caused by different states, which may cause our model too complicated to converge. Therefore, we choose to explore North Carolina.
 
 ### Q5 Why 2020? 
 
@@ -127,9 +130,9 @@ covid_clean=covid_clean%>%
 covid_clean=as.data.frame(unclass(covid_clean),stringsAsFactors=TRUE)
 ```
 
-After the first part of cleaning, we got 271822 observations with 270088 survivors and 1734 deaths which can be found in the appendix. Thus, the death rate from the population is $1734/271822=0.00638$
+After cleaning the first part, we get 271822 observations with 270088 survivors and 1734 deaths which can be found in the appendix. Thus, the death rate from the population is $1734/271822=0.00638$
 
-### Q8 Any finding during the EDA?
+### Q7 Any finding during the EDA?
 
 ```{r echo=FALSE,warning=FALSE}
 stackedbar_case_month_hosp_yn=ggplot(covid_clean, aes(x = as.factor(case_month), 
@@ -215,7 +218,7 @@ stackedbar_death_yn_hosp_yn
 
 Most of the observations in this data set are Caucassians. Such imbalance may downplay the potential racial effect. Most of the death cases were hospitalized. 
 
-### Q9 How do you build the model and what is your result?
+### Q8 How do you build the model and what is your result?
 
 For both outcome model and PS model, we apply two algorithms: Logistic Regression and Decision Tree. We want to compare the result of all four combinations.
 
@@ -247,7 +250,7 @@ q2=ggplot(covid_clean, mapping = aes(x = ps_tree, fill = factor(hosp_yn)))+
 grid.arrange(q1, q2, ncol=2)
 ```
 
-The density plot of PS in different algorithm are plot here to check the overlap. As we obvioused, both PS model has relative nice overlap, so we do not clean any data out.
+The density plot of PS in different algorithms is provided to check the overlap. As we can see, both PS models have relative nice overlaps. So there is no need to clean any data out.
 
 
 
@@ -303,26 +306,26 @@ The table here illustrate our result, where:
 * $\tau_1$ applied the Logistic Regression in PS model and Decision Tree in outcome model
 * $\tau_4$ applied the Decision Tree in both PS model and outcome model
 
-### Q10 How Do you interpretate your reuslt?
+### Q9 How Do you interpretate your reuslt?
 
-All of the four estimators illustrate that the $\tau^{DR}$ is about 0.018, which means people were sent to the hospital has about 0.018 higher rate to die than people who were not. Compared to the average death rate 0,0063, it is a very significant difference. It seems to be reliable, since we can assume people who were sent to the hospital had a more serious symptom. And, since we do not have the seriousness of each observation in our corvariates, such information may be concluded to the difference of the death rate. Moreover, the 4 estimators shows very close results, which is consistent with Bang and Robin's (2005) idea about how the Double Robust Estimator works. However, since we have a very lower death rate, it may also be caused by the random probability.
+All of the four estimators illustrate that the $\tau^{DR}$ is about 0.018, which means the death rate of people sent to hospitals is about 0.018 higher than that of dying people who are not. Compared to the average death rate 0.0063, it is a very significant difference. This coefficient seems reliable since we can assume patients at hospitals would have more severe symptoms. Also, since we have no covariates describing each observation’s severity of symptoms, such information may contribute to the difference in death rates. Moreover, the four estimators present close results, consistent with Bang and Robin's (2005) idea about how the Double Robust Estimator works. However, we can not exclude the possibility of random probability effects since our data provides a low death rate.
 
-### Q11: Are there any past literature? What are the differences between this project and them?
+### Q10: Are there any past literature? What are the differences between this project and them?
 
 In the past two years, several papers have discussed the potential determinants of Covid-19 death rates. Lan Feinhandler and four other authors offer several predictors that lead to the death rate during the first eight months of 2020. They implement the OLS model/Two-stage regression model/Lasso regression model and conclude that the national Covid-19 death rate is greater than that of other flu pandemics. Also, the increase in the reported death rate in states with Democratic governors is higher than the increase in states with Republican governors. (Feinhandler et al., 2020). Besides, in the paper Determinants of COVID-19 Death Rate in Europe: Empirical Analysis, six authors use the OLS models to test multiple hypotheses. They finally prove that the population density in European countries does not affect the COVID-19 death rate. Also, the COVID-19 death rate will not drastically raise mortality statistics since people already at risk are susceptible to the disease. (Kozlovskyi et al., 2021)
 
 Comparing to other method, we focus on the 2020 NC data, and we choose to build the model under the causal inference, which allow us to explore the effect of hospitalization on death rate without the effects of other parameter. If we use a regression, for example, directly, it is hard for us to address the cor variance between the death rate the the hospitalization is because of themselves, or because they are just both correlated to any other parameter.
 
-### Q12 Are there any limitations?
+### Q11 Are there any limitations?
 
-The first limitation is that although we have a large number of observations with solid values, there are still observations with missing values up to twenty thousand that we have to delete. As a result, there might exist a loss of “explanality” inside the observation with missing values of death rates. 
-Besides, our data has no access to the severity of symptoms the patient experiences. Thus, when testing the casual relationship between hospitazation and death rates, we can not exclude the possibility that patients with severer symptoms would go to hopstials and patients with less severe symptoms would stay home, leading to the case that death rates of former would be higher than that of later.
+The first limitation is that although we have many observations with solid values, there are still observations with missing values up to twenty thousand that we have to delete. As a result, there might exist a loss of “explainability” inside the observation with missing values of death rates. 
+Besides, as mentioned above, our data has no access to the severity of symptoms the patient experiences. Thus, when testing the causal relationship between hospitalization and death rates, we can not exclude the possibility that patients with severer symptoms would go to hospitals and patients with less severe symptoms would stay home. This hypothesis, if true, would lead to the case that death rates of the former would be higher than that of the latter.
 
-### Q13 Are there any future directions/Perspective?
 
-With access to data regarding the severity of the illness, we can futher test the selection bias mentioned above and future test the effectiveness of hospitalization and therapy received inside. 
-Also, if we can acquire data related to the severity of other illnesses which share similar medical-source-occupation patterns with Covid-19, we are able to determine whether the virus is as severe as we expect.  
+### Q12 Are there any future directions/Perspective?
 
+With access to data regarding the severity of the illness, we can further test the selection bias mentioned above and future test the effectiveness of hospitalization and therapy received inside. 
+Also, suppose we can acquire data related to the severity of other illnesses which share similar medical-source-occupation patterns with Covid-19. In that case, we are able to determine whether the virus is as severe as we expect.
 
 
 ## Reference
